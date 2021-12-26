@@ -8,6 +8,32 @@ import logging.config
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 
+def plot_bar_group(plot_config):
+    # 这里只能展示训练集和测试集两组数据，所以最多两组
+    labels = plot_config['labels']
+    values1 = plot_config['values1'] # train
+    values2 = plot_config['values2'] # test
+
+    x = np.arange(len(labels))  # the label locations
+    width = 0.35  # the width of the bars
+
+    fig, ax = plt.subplots(figsize=plot_config['figsize'])
+    rects1 = ax.bar(x - width/2, values1, width, label='train data', alpha=0.5, color='g')
+    rects2 = ax.bar(x + width/2, values2, width, label='test data', alpha=0.5, color='b')
+    
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel(plot_config['ylabel'])
+    ax.set_title(plot_config['title'])
+    ax.set_xticks(x, labels)
+    ax.legend()
+    
+    ax.bar_label(rects1, padding=3)
+    ax.bar_label(rects2, padding=3)
+    fig.tight_layout()
+    plt.grid()
+    plt.show()
+    plt.savefig('./figures/'+plot_config['filename'])
+
 
 def plot_bar(plot_config):
     plt.figure(figsize=plot_config['figsize'])
@@ -35,6 +61,7 @@ def plot_bar(plot_config):
     plt.title(plot_config['title'])
     if not os.path.exists('figures'):
         os.mkdir('figures')
+    plt.grid()
     plt.savefig('./figures/'+plot_config['filename'])
     plt.show()
 
@@ -154,19 +181,18 @@ if __name__ == '__main__':
     import os
 
     read_data = read_data()
-    x_train, x_test, y_train, y_test = read_data.read_data_from_16_source('../16ue_20211223/')
+    x_train, x_test, y_train, y_test = read_data.read_data_by_sort_time('../16ue_20211223/')
 
     set_seed(42)
-    logging.config.dictConfig(get_logging_config(file_name='train.log'))
-    logger = logging.getLogger('logger')
-    logger.info('123')
     plot_config = {
             'figsize':(10, 5),
-            'values':list(Counter(y_test).values()),
+            #'values':list(Counter(y_test).values()),
+            'values1':list(Counter(y_train).values()), # values1放置train data
+            'values2':list(Counter(y_test).values()), # values2放置test data
             'labels':list(Counter(y_test).keys()),
             'xlabel':'labels',
             'ylabel':'number of symbols',
-            'title':'number of train symbols',
-            'filename':'16_source_train_symbols_bar.png',
+            'title':'number of train and test symbols',
+            'filename':'16source_train_test_group_time_rank_symbols_bar.png',
             }
-    plot_bar(plot_config)
+    plot_bar_group(plot_config)

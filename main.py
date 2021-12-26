@@ -10,9 +10,9 @@ from pathlib import Path
 from read_data import read_data
 
 
-import logging
-import logging.config
-from utils import get_logging_config
+#import logging
+#import logging.config
+#from utils import get_logging_config
 import gc
 import numpy as np
 
@@ -26,18 +26,20 @@ parser.add_argument('--random_seed', type=int, default=42)
 parser.add_argument('--epochs', type=int, default=30)
 parser.add_argument('--batch_size', type=int, default=64)
 parser.add_argument('--lr', type=float, default=0.0001)
+parser.add_argument('--balance', type=bool, default=True)
+parser.add_argument('--data_process_method', type=str, default='standar')
 args = parser.parse_args() # 解析参数
 
 
-
 # logger set
-log_name = args.exp_name + '.log'
-logging.config.dictConfig(get_logging_config(file_name=log_name))
-logger = logging.getLogger('logger')
+#log_name = args.exp_name + '.log'
+#logging.config.dictConfig(get_logging_config(file_name=log_name))
+#logger = logging.getLogger('logger')
 
 # 打印出所有参数
 for arg in vars(args):
-    logger.info("{:<20}{:<}".format(arg, str(getattr(args, arg))))
+    print("{:<20}{:<}".format(arg, str(getattr(args, arg))))
+    #logger.info("{:<20}{:<}".format(arg, str(getattr(args, arg))))
 
 set_seed(args.random_seed)
 
@@ -55,13 +57,15 @@ test_config = {
     'pin_memory':True,
 }
 print('Stage1: data load')
-data = Data(logger)
+data = Data()
 read_data = read_data()
-x_train, x_test, y_train, y_test = read_data.read_data_by_sort_time(args.data_path) #如果只是单纯训练模型，则只要将下面注释即可，如果要未知源识别，则取消注释下面代码
+x_train, x_test, y_train, y_test = read_data.read_data_by_sort_time(args.data_path,
+        balance=args.balance) #如果只是单纯训练模型，则只要将下面注释即可，如果要未知源识别，则取消注释下面代码
+
 # x_train, x_test, x_val, y_train, y_test, y_val = data.recognization_data_process(x_train, x_test, y_train, y_test)
 gc.collect()
 print('load data successful')
-x_train = data.process(x_train)
+x_train = data.process(x_train, method=args.data_process_method)
 x_test = data.process(x_test)
 #x_val = data.process(x_val) 模型训练部分不需要val
 #del x_val, y_val
@@ -96,8 +100,7 @@ config = {
     'epochs' : epochs,
     'train_loader' : train_loader,
     'test_loader' : test_loader,
-    'logger' : logger,
-    'model_save_name' : str(Path(logger.handlers[0].baseFilename).stem) + '.model',
+    'model_save_name' : 'models' + args.exp_name + '.model',
 }
 
 print('Stage2: model training')

@@ -13,7 +13,6 @@ class Trainer:
         self.epochs = kwargs.get("epochs")
         self.train_loader = kwargs.get("train_loader")
         self.test_loader = kwargs.get("test_loader")
-        self.logger = kwargs.get('logger')
         self.model_save_name = kwargs.get('model_save_name')
 
     def train_step(self):
@@ -58,7 +57,9 @@ class Trainer:
             train_acc = train_acc_num/len(self.train_loader.dataset)
             test_acc = test_acc_num/len(self.test_loader.dataset)
             self.scheduler.step(test_loss)
-            self.logger.info(f'Epoch:{epoch:2} | Train Loss:{train_loss:6.4f} | Train Acc:{train_acc:6.4f} | Test Loss:{test_loss:6.4f} | Test Acc:{test_acc:6.4f}')
+
+            print(f'Epoch:{epoch:2} | Train Loss:{train_loss:6.4f} | Train Acc:{train_acc:6.4f} | Test Loss:{test_loss:6.4f} | Test Acc:{test_acc:6.4f}')
+
             if test_acc > self.best_score:
                 self.best_score = test_acc
                 self.model_save(self.model_save_name)
@@ -68,11 +69,13 @@ class Trainer:
             train_acc_list.append(train_acc_list)
             test_loss_list.append(test_loss)
             test_acc_list.append(test_acc)
-        with open(str(path), 'wb') as f:
-            pickle.dump(train_loss_list, f)
-            pickle.dump(train_acc_list, f)
-            pickle.dump(test_loss_list, f)
-            pickle.dump(test_acc_list, f)
+        def save2pkl(obj, filename):
+            with open(filename, 'wb') as f:
+                pickle.dump(obj, f)
+        save2pkl(train_loss_list, str(path/'train_loss.pkl'))
+        save2pkl(train_acc_list, str(path/'train_acc.pkl'))
+        save2pkl(test_loss_list, str(path/'test_loss.pkl'))
+        save2pkl(test_acc_list, str(path/'test_acc.pkl'))
 
     def model_save(self, file_name):
         path = Path('./models')

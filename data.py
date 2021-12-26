@@ -10,30 +10,30 @@ random.seed(42)
 np.random.seed(42)
 
 class Data:
-    def __init__(self, logger):
+    def __init__(self):
         self.data = None
-        self.logger = logger
+        #self.logger = logger
 
     def load(self, path):
         self.data = np.load(path)
         return self.data
 
     @staticmethod
-    def process(data):
+    def process(data, method='standar'):
         #length,  = len(data)
         H, W = data.shape
         #data = (data - np.mean(data, 1).reshape(length, -1)) / np.std(data, 1).reshape(length, 1)
 
         # 下面三行是对数据的标准化
-        #mean_ = np.mean(data, 1).reshape(H, -1)
-        #std_ = np.std(data, 1).reshape(H, 1)
-        #data = ((data - mean_) / std_).reshape(-1, 2, 64, 64)
-
-        # 下面几行是对数据的归一化
-        data = np.abs(data)
-        data = data / np.expand_dims(np.max(data, 1), axis=1)
-        data = data.reshape(-1, 2, 64, 64)
-        # end here
+        if method == 'standar':
+            mean_ = np.mean(data, 1).reshape(H, -1)
+            std_ = np.std(data, 1).reshape(H, 1)
+            data = ((data - mean_) / std_).reshape(-1, 2, 64, 64)
+        elif method == 'abs':
+            # 下面几行是对数据的归一化
+            data = np.abs(data)
+            data = data / np.expand_dims(np.max(data, 1), axis=1)
+            data = data.reshape(-1, 2, 64, 64)
         gc.collect()
         return data
 
@@ -80,8 +80,8 @@ class Data:
                         y_test.extend([label_count]*L)
                 label_count += 1
         x_train, x_test, y_train, y_test = np.array(x_train), np.array(x_test), np.array(y_train), np.array(y_test)
-        self.logger.info(f'y_test bincount :{np.bincount(y_test)}')
-        self.logger.info(f'y_train bincount:{np.bincount(y_train)}')
+        print(f'y_test bincount :{np.bincount(y_test)}')
+        print(f'y_train bincount:{np.bincount(y_train)}')
         return x_train, x_test, y_train, y_test
 
     def read_data_by_del_less_data_phone(self, root='../9_2data'):
@@ -123,8 +123,8 @@ class Data:
         x_test = np.concatenate(x_test)
         y_train = np.array(y_train)
         y_test = np.array(y_test)
-        self.logger.info(f'y_test bincount :{np.bincount(y_test)}')
-        self.logger.info(f'y_train bincount:{np.bincount(y_train)}')
+        print(f'y_test bincount :{np.bincount(y_test)}')
+        print(f'y_train bincount:{np.bincount(y_train)}')
         return x_train, x_test, y_train, y_test
 
 
@@ -176,8 +176,8 @@ class Data:
         y_train = np.array(y_train)
         y_test = np.array(y_test)
 
-        self.logger.info(f'y_test bincount :{np.bincount(y_test)}')
-        self.logger.info(f'y_train bincount:{np.bincount(y_train)}')
+        print(f'y_test bincount :{np.bincount(y_test)}')
+        print(f'y_train bincount:{np.bincount(y_train)}')
         return x_train, x_test, y_train, y_test
 
     def recognization_data_process(self, x_train, x_test, y_train, y_test, un_label=None, rate=0.6):
@@ -223,9 +223,9 @@ class Data:
         y_train = get_label_map(y_train)
         y_test = get_label_map(y_test)
         y_val = np.array(y_val)
-        self.logger.info(f'y_test bincount :{np.bincount(y_test)}')
-        self.logger.info(f'y_train bincount:{np.bincount(y_train)}')
-        self.logger.info(f'y_val bincount:{np.bincount(y_val)}')
+        print(f'y_test bincount :{np.bincount(y_test)}')
+        print(f'y_train bincount:{np.bincount(y_train)}')
+        print(f'y_val bincount:{np.bincount(y_val)}')
 
         return x_train, x_test, x_val, y_train, y_test, y_val
 
@@ -288,8 +288,8 @@ class Data:
                 y_test.extend([count] * l)
             count += 1
         x_train, x_test, y_train, y_test = np.array(x_train), np.array(x_test), np.array(y_train), np.array(y_test)
-        self.logger.info(f'y_test bincount :{np.bincount(y_test)}')
-        self.logger.info(f'y_train bincount:{np.bincount(y_train)}')
+        print(f'y_test bincount :{np.bincount(y_test)}')
+        print(f'y_train bincount:{np.bincount(y_train)}')
         return x_train, x_test, y_train, y_test
 
     def read_9_2_data_by_rounds(self, root='../9_2data'):
@@ -331,8 +331,8 @@ class Data:
         train_label = np.array(train_label)
         test_label = np.array(test_label)
         gc.collect()
-        self.logger.info(f'y_test bincount :{np.bincount(test_label)}')
-        self.logger.info(f'y_train bincount:{np.bincount(train_label)}')
+        print(f'y_test bincount :{np.bincount(test_label)}')
+        print(f'y_train bincount:{np.bincount(train_label)}')
         return x_train, x_test, train_label, test_label
 
 
@@ -379,10 +379,10 @@ class Data:
             label_id.append(count)
             count += 1
 
-        self.logger.info(f'test phone: {test_id[0]}, {test_id[1]}')
-        self.logger.info(f'x_train:{len(x_train)}, y_train:{len(y_train)}, x_test:{len(x_test)}, y_test:{len(y_test)}')
-        self.logger.info(f'y_test bincount :{np.bincount(y_test)}')
-        self.logger.info(f'y_train bincount:{np.bincount(y_train)}')
+        print(f'test phone: {test_id[0]}, {test_id[1]}')
+        print(f'x_train:{len(x_train)}, y_train:{len(y_train)}, x_test:{len(x_test)}, y_test:{len(y_test)}')
+        print(f'y_test bincount :{np.bincount(y_test)}')
+        print(f'y_train bincount:{np.bincount(y_train)}')
         return np.array(x_train), np.array(x_test), np.array(y_train), np.array(y_test)
 
 class Train_Test_Split:
