@@ -5,16 +5,19 @@ import torch.nn as nn
 import torch.optim as optim
 from data import Data, MyDataLoader, MyDataset
 from trainer import Trainer
+
+import utils
 from utils import set_seed
+
 from pathlib import Path
+import os
 from read_data import read_data
 
-
-#import logging
-#import logging.config
-#from utils import get_logging_config
 import gc
 import numpy as np
+
+import toml
+from utils import save2pkl
 
 import argparse
 
@@ -26,20 +29,17 @@ parser.add_argument('--random_seed', type=int, default=42)
 parser.add_argument('--epochs', type=int, default=30)
 parser.add_argument('--batch_size', type=int, default=64)
 parser.add_argument('--lr', type=float, default=0.0001)
-parser.add_argument('--balance', type=bool, default=True)
+parser.add_argument('--balance', action='store_true')
 parser.add_argument('--data_process_method', type=str, default='standar')
 args = parser.parse_args() # 解析参数
 
-
-# logger set
-#log_name = args.exp_name + '.log'
-#logging.config.dictConfig(get_logging_config(file_name=log_name))
-#logger = logging.getLogger('logger')
+# 获取打印参数
+plot_config = toml.load('./plot_config.toml')
+plot_config['exp_name'] = args.exp_name
 
 # 打印出所有参数
 for arg in vars(args):
     print("{:<20}{:<}".format(arg, str(getattr(args, arg))))
-    #logger.info("{:<20}{:<}".format(arg, str(getattr(args, arg))))
 
 set_seed(args.random_seed)
 
@@ -58,17 +58,20 @@ test_config = {
 }
 print('Stage1: data load')
 data = Data()
-read_data = read_data()
-x_train, x_test, y_train, y_test = read_data.read_data_by_sort_time(args.data_path,
-        balance=args.balance) #如果只是单纯训练模型，则只要将下面注释即可，如果要未知源识别，则取消注释下面代码
+phone_data = read_data()
+# 获取数据分布图
+x_train, x_test, y_train, y_test = phone_data.read_data_by_sort_time(args.data_path, balance=args.balance) 
 
-# x_train, x_test, x_val, y_train, y_test, y_val = data.recognization_data_process(x_train, x_test, y_train, y_test)
+plot_config['num_class'] = phone_data.num_class
+
+save2pkl(phone_data.id2phone, 'exp/' + args.exp_name + '/id2phone.pkl') # 保存标签
+utils.plot_bar_group(values1=phone_data.trainBincount, values2=phone_data.testBincount,
+        labels=phone_data.true_label, plot_config=plot_config)
+
 gc.collect()
 print('load data successful')
 x_train = data.process(x_train, method=args.data_process_method)
-x_test = data.process(x_test)
-#x_val = data.process(x_val) 模型训练部分不需要val
-#del x_val, y_val
+x_test = data.process(x_test, method=args.data_process_method)
 print('data process done')
 
 gc.collect()
@@ -82,7 +85,7 @@ test_loader = MyDataLoader(test_dataset, **test_config)
 model = resnet18()
 model.conv1 = nn.Conv2d(2, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
 model.maxpool = nn.AdaptiveAvgPool2d(output_size=(7, 7))
-model.fc = nn.Linear(512, len(np.bincount(y_test)), bias=True)
+model.fc = nn.Linear(512, phone_data.num_class, bias=True)
 
 epochs = args.epochs
 lr = args.lr
@@ -100,9 +103,22 @@ config = {
     'epochs' : epochs,
     'train_loader' : train_loader,
     'test_loader' : test_loader,
-    'model_save_name' : 'models' + args.exp_name + '.model',
+    'model_save_name' : args.exp_name + '.model',
 }
 
 print('Stage2: model training')
 trainer = Trainer(**config)
 trainer.train()
+
+# 模型训练完毕， 开始画图
+path = Path('exp')/args.exp_name
+train_acc, test_acc = utils.loadpkl(str(path/'train_acc.pkl')), utils.loadpkl(str(path/'test_acc.pkl'))
+train_loss, test_loss = utils.loadpkl(str(path/'train_loss.pkl')), utils.loadpkl(str(path/'test_loss.pkl'))
+# 准确率图
+utils.plot_line_chart(train_acc, test_acc, plot_config, mode='acc')
+# loss图
+utils.plot_line_chart(train_loss, test_loss, plot_config, mode='loss')
+# 混淆矩阵图
+pred_labels = utils.loadpkl(str(Path('exp')/args.exp_name/'pre_labels.pkl'))
+true_labels = utils.loadpkl(str(Path('exp')/args.exp_name/'true_labels.pkl'))
+utils.plot_cm(pred_labels, true_labels, plot_config) # preds, label

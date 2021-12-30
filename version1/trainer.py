@@ -1,6 +1,7 @@
 import torch
 from pathlib import Path
 import pickle
+from utils import save2pkl
 
 class Trainer:
     def __init__(self, **kwargs):
@@ -14,6 +15,7 @@ class Trainer:
         self.train_loader = kwargs.get("train_loader")
         self.test_loader = kwargs.get("test_loader")
         self.model_save_name = kwargs.get('model_save_name')
+        self.true_label, self.pre_label = [], []
 
     def train_step(self):
         self.model.train()
@@ -39,10 +41,13 @@ class Trainer:
         with torch.no_grad():
             for feature, label in self.test_loader:
                 feature = feature.to(self.device)
+
+                self.true_label.extend(label)
                 label = label.to(self.device)
                 preds = self.model(feature)
                 self.test_loss += self.criterion(preds, label) / len(self.test_loader)
                 self.test_acc_num += ((preds.argmax(1) == label).sum())
+                self.pre_label.append(preds.argmax(1).cpu())
         return self.test_loss, self.test_acc_num
 
     def train(self):
@@ -51,6 +56,7 @@ class Trainer:
         path = 'exp'/Path(self.kwargs.get('exp'))
         if not path.exists():
             path.mkdir(parents=True) # 创建多级子目录
+
         for epoch in range(self.epochs):
             train_loss, train_acc_num = self.train_step()
             test_loss, test_acc_num = self.test_step()
@@ -66,16 +72,15 @@ class Trainer:
 
             # 保存准确率等数据
             train_loss_list.append(train_loss)
-            train_acc_list.append(train_acc_list)
+            train_acc_list.append(train_acc)
             test_loss_list.append(test_loss)
             test_acc_list.append(test_acc)
-        def save2pkl(obj, filename):
-            with open(filename, 'wb') as f:
-                pickle.dump(obj, f)
         save2pkl(train_loss_list, str(path/'train_loss.pkl'))
         save2pkl(train_acc_list, str(path/'train_acc.pkl'))
         save2pkl(test_loss_list, str(path/'test_loss.pkl'))
         save2pkl(test_acc_list, str(path/'test_acc.pkl'))
+        save2pkl(self.true_label, str(path/'true_labels.pkl'))
+        save2pkl(self.pre_label, str(path/'pre_labels.pkl'))
 
     def model_save(self, file_name):
         path = Path('./models')
