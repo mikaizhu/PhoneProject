@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
-cd /userhome/phone_project
-
-data_path='../16ue_20211223'
+# /userhome/phone_project/test_v1
+cd $(pwd)
+start=$(date +%s)
+echo "START: $(date)"
+data_path='../../16ue_20211223'
 exp_name='16_source_sort_by_time_unbalance_abs_minmax'
+
+# -p 参数可以忽略报错，同时可以递归创建文件
+mkdir -p log exp/${exp_name} models figures/${exp_name}
 random_seed=42
-epochs=30
+epochs=2
 lr=0.0001
 balance=False
 data_process_method=abs # option: 1. standar  2. abs
@@ -29,14 +34,9 @@ EOF
 	--random_seed ${random_seed} \
 	--epochs ${epochs} \
 	--lr ${lr} \
-	--balance ${balance} \
 	--data_process_method ${data_process_method} \
 	2>&1 | tee -ai log/${exp_name}.log &
 pid=$!
 wait ${pid}
 
-# part2: 绘制数据统计图
-
-# part3: 绘制train, test loss accuracy 曲线图
-
-# part4: 绘制混淆矩阵图
+echo "END: $(date)"
