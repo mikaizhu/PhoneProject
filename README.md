@@ -44,6 +44,31 @@ test_model.py: 保存模型后，用来测试模型，并画图
 sh exp1.sh
 ```
 
+# version2实验
+
+将模型换成DNN，这样可以更方便使用自己定义的模型，只要定义在model.py文件中即可
+
+# version3实验
+
+增加了多gpu训练模型，主要文件有：
+- exp1_ngpu.sh
+- main_ngpu.py
+- trainer.py
+
+参考：https://github.com/jia-zhuang/pytorch-multi-gpu-training
+
+主要思路：
+
+> 1. 使用distributed data parallel多进程进行单机多卡实验，先前版本是使用命令行
+> `python -m torch.distributed.lunch`, 现在更换为torchrun即可, 参考
+> exp1_ngpu.sh
+> 2. 多进程会连续打印问题：使用if args.local_rank==0方法来解决
+
+# version4
+
+实现了切片数据增强
+
+
 # 程序设计思路
 
 整个程序分为下面几个模块(每个模块应该做到方便单独调试)：
@@ -81,7 +106,7 @@ sh exp1.sh
 
 # TODO
 
-- [ ] 支持多GPU训练
+- [x] 支持多GPU训练
 - [ ] 添加checkpoint，程序意外中断也可以从checkpoint位置开始训练
 
 

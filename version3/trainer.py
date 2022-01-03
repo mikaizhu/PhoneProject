@@ -7,6 +7,7 @@ class Trainer:
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         self.device = kwargs.get("device")
+        self.args = kwargs.get("args")
         self.model = kwargs.get("model").to(self.device)
         self.optimizer = kwargs.get("optimizer")
         self.scheduler = kwargs.get("scheduler")
@@ -64,23 +65,29 @@ class Trainer:
             test_acc = test_acc_num/len(self.test_loader.dataset)
             self.scheduler.step(test_loss)
 
-            print(f'Epoch:{epoch:2} | Train Loss:{train_loss:6.4f} | Train Acc:{train_acc:6.4f} | Test Loss:{test_loss:6.4f} | Test Acc:{test_acc:6.4f}')
 
-            if test_acc > self.best_score:
-                self.best_score = test_acc
-                self.model_save(self.model_save_name)
+            if self.args.local_rank == 0:
+                print(f'Epoch:{epoch:2} | Train Loss:{train_loss:6.4f} | Train Acc:{train_acc:6.4f} | Test Loss:{test_loss:6.4f} | Test Acc:{test_acc:6.4f}')
+
+            if self.args.local_rank == 0:
+                if test_acc > self.best_score:
+                    self.best_score = test_acc
+                    self.model_save(self.model_save_name)
 
             # 保存准确率等数据
-            train_loss_list.append(train_loss)
-            train_acc_list.append(train_acc)
-            test_loss_list.append(test_loss)
-            test_acc_list.append(test_acc)
-        save2pkl(train_loss_list, str(path/'train_loss.pkl'))
-        save2pkl(train_acc_list, str(path/'train_acc.pkl'))
-        save2pkl(test_loss_list, str(path/'test_loss.pkl'))
-        save2pkl(test_acc_list, str(path/'test_acc.pkl'))
-        save2pkl(self.true_label, str(path/'true_labels.pkl'))
-        save2pkl(self.pre_label, str(path/'pre_labels.pkl'))
+
+            if self.args.local_rank == 0:
+                train_loss_list.append(train_loss)
+                train_acc_list.append(train_acc)
+                test_loss_list.append(test_loss)
+                test_acc_list.append(test_acc)
+        if self.args.local_rank == 0:
+            save2pkl(train_loss_list, str(path/'train_loss.pkl'))
+            save2pkl(train_acc_list, str(path/'train_acc.pkl'))
+            save2pkl(test_loss_list, str(path/'test_loss.pkl'))
+            save2pkl(test_acc_list, str(path/'test_acc.pkl'))
+            save2pkl(self.true_label, str(path/'true_labels.pkl'))
+            save2pkl(self.pre_label, str(path/'pre_labels.pkl'))
 
     def model_save(self, file_name):
         path = Path('./models')

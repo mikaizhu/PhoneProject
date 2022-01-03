@@ -7,6 +7,7 @@ class Trainer:
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         self.device = kwargs.get("device")
+        self.args = kwargs.get("args")
         self.model = kwargs.get("model").to(self.device)
         self.optimizer = kwargs.get("optimizer")
         self.scheduler = kwargs.get("scheduler")
