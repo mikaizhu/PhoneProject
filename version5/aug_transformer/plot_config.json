@@ -1,0 +1,47 @@
+{
+  "line": {
+    "acc": {
+      "labels1": "train acc",
+      "labels2": "test acc",
+      "xlabel": "epochs",
+      "ylabel": "acc",
+      "filename": "line_acc.png"
+    },
+    "loss": {
+      "labels1": "train loss",
+      "labels2": "test loss",
+      "xlabel": "epochs",
+      "ylabel": "loss",
+      "filename": "line_loss.png"
+    }
+  },
+  "bar": {
+    "group": {
+      "figsize": [
+        15,
+        10
+      ],
+      "xlabel": "Phone ID",
+      "ylabel": "number of symbols",
+      "title": "number of train and test symbols",
+      "filename": "bar_group.png"
+    },
+    "single": {
+      "train": {
+        "xlabel": "Phone ID",
+        "ylabel": "number of symbols",
+        "title": "number of train symbols",
+        "filename": "bar_single_train.png"
+      },
+      "test": {
+        "xlabel": "Phone ID",
+        "ylabel": "number of symbols",
+        "title": "number of test symbols",
+        "filename": "bar_single_test.png"
+      }
+    }
+  },
+  "cm": {
+    "filename": "cm.png"
+  }
+}

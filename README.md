@@ -68,6 +68,17 @@ sh exp1.sh
 
 实现了切片数据增强
 
+# version5
+
+新增功能：
+- 这个版本使用的是2个gpu，1个gpu不能运行
+- 同时修改了transformer的网络结构，使得准确率提高
+
+# version6
+新增功能：
+- 使用两个gpu才能运行
+- 在version5的版本下，将损失函数改成了cross entropy + center
+  loss，使得准确率进一步提升
 
 # 程序设计思路
 
